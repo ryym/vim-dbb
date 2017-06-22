@@ -29,7 +29,7 @@ function! dbb#run() abort
 
   let query = join(getbufline(s:q_bufnr, 1, '$'), " ")
 
-  let mes = { 'Query': query }
+  let mes = ['Query', { 'Query': query }]
   call ch_sendexpr(s:ch, mes, { 'callback': funcref('<SID>show_results') })
 endfunction
 
@@ -41,10 +41,9 @@ function! <SID>show_results(ch, res) abort
   execute 'tabnext' . rettabnr
   execute retwinnr . 'wincmd w'
 
+  setlocal noreadonly
   normal ggdG
   call setline(1, split(a:res.Rows, '\n'))
-
-  setlocal noreadonly
   update
   setlocal readonly
 endfunction
