@@ -4,17 +4,45 @@ function! dbb#install_server() abort
   " TODO: Download server binary program.
 endfunction
 
+let s:dbb_running = 0
+let s:sysch = 0
 let s:ch = 0
 let s:q_bufnr = -1
 let s:res_bufnr = -1
 
 function! dbb#start() abort
+  call system('go run ' . g:vimdbb_server_src . '/cmd/vimdbb/main.go&')
+
+  if !s:dbb_running
+    let mtry = 200
+    let ntry = 0
+    let s:sysch = ch_open('localhost:8080')
+    while ch_status(s:sysch) != 'open'
+      sleep 5m
+      let s:sysch = ch_open('localhost:8080')
+      let ntry += 1
+      if ntry >= mtry
+        throw 'Can not connect to Dbb server'
+      endif
+    endwhile
+    echom 'Dbb start'
+
+    let s:dbb_running = 1
+  endif
+
   let s:ch = ch_open('localhost:8080')
 
   if s:q_bufnr == -1
     execute 'edit' g:dbb_work_dir . '/query'
     setfiletype sql
     let s:q_bufnr = bufnr('%')
+  endif
+endfunction
+
+function! dbb#stop() abort
+  if s:dbb_running
+    call ch_sendexpr(s:sysch, ['KILL', {}])
+    let s:dbb_running = 0
   endif
 endfunction
 
