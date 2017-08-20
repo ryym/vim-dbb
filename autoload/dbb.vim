@@ -11,7 +11,8 @@ let s:q_bufnr = -1
 let s:res_bufnr = -1
 
 function! dbb#start() abort
-  call system('go run ' . g:vimdbb_server_src . '/cmd/vimdbb/main.go&')
+  " call system('go run ' . g:vimdbb_server_src . '/cmd/vimdbb/main.go&')
+  " echom 'Running dbb server...'
 
   if !s:dbb_running
     let mtry = 200
@@ -74,4 +75,8 @@ function! <SID>show_results(ch, res) abort
   call setline(1, split(a:res.Rows, '\n'))
   update
   setlocal readonly
+
+  let q_bufinfo = getbufinfo(s:q_bufnr)
+  let q_winnr = win_id2tabwin(q_bufinfo[0].windows[0])[0]
+  execute q_winnr . 'wincmd w'
 endfunction
