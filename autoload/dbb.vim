@@ -18,7 +18,7 @@ function! dbb#start() abort
     let ntry = 0
     let s:sysch = ch_open('localhost:8080')
     while ch_status(s:sysch) != 'open'
-      sleep 5m
+      sleep 10m
       let s:sysch = ch_open('localhost:8080')
       let ntry += 1
       if ntry >= mtry
