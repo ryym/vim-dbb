@@ -23,7 +23,8 @@ function! dbb#start() abort
       let s:sysch = ch_open('localhost:8080')
       let ntry += 1
       if ntry >= mtry
-        throw 'Can not connect to Dbb server'
+        echoerr 'Can not connect to Dbb server'
+        return
       endif
     endwhile
     echom 'Dbb start'
@@ -59,10 +60,20 @@ function! dbb#run() abort
   let query = join(getbufline(s:q_bufnr, 1, '$'), " ")
 
   let mes = ['Query', { 'Query': query }]
-  call ch_sendexpr(s:ch, mes, { 'callback': funcref('<SID>show_results') })
+  call ch_sendexpr(s:ch, mes, { 'callback': funcref('<SID>handle_res') })
 endfunction
 
-function! <SID>show_results(ch, res) abort
+function! <SID>handle_res(ch, res) abort
+  if a:res.Command ==# 'ERR'
+    echoerr 'ERR: ' . a:res.Result
+    return
+  endif
+  if a:res.Command ==# 'Query'
+    call s:show_results(a:ch, a:res.Result)
+  endif
+endfunction
+
+function! <SID>show_results(ch, ret) abort
   let resbufinfo = getbufinfo(s:res_bufnr)
   let s:res_bufnr = resbufinfo[0].bufnr
   let retw = resbufinfo[0].windows[0]
@@ -72,7 +83,7 @@ function! <SID>show_results(ch, res) abort
 
   setlocal noreadonly
   normal ggdG
-  call setline(1, split(a:res.Rows, '\n'))
+  call setline(1, split(a:ret.Rows, '\n'))
   update
   setlocal readonly
 
