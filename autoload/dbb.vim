@@ -14,6 +14,10 @@ function! dbb#start() abort
   " call system('go run ' . g:vimdbb_server_src . '/cmd/vimdbb/main.go&')
   " echom 'Running dbb server...'
 
+  if !isdirectory(g:dbb_work_dir)
+    call mkdir(g:dbb_work_dir, "p")
+  endif
+
   if !s:dbb_running
     let mtry = 200
     let ntry = 0
