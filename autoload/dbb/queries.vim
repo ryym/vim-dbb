@@ -1,5 +1,4 @@
 let s:qdata = {}
-let s:b2q = {}
 
 function! dbb#queries#start(work_dir)
   if !isdirectory(a:work_dir . '/queries')
@@ -34,7 +33,6 @@ function! dbb#queries#open(qid, work_dir)
   execute 'edit' q.q_path
   setfiletype sql
   let q.bufnr = bufnr('%')
-  let s:b2q[q.bufnr] = q.qid
 
   return q
 endfunction
@@ -68,16 +66,11 @@ function! s:gen_new_query_id(qdata)
 endfunction
 
 function! dbb#queries#get_from_bufnr(bufnr)
-  if has_key(s:b2q, a:bufnr)
-    return s:qdata[s:b2q[a:bufnr]]
-  endif
-
   let name = fnamemodify(bufname(a:bufnr), ':t')
   if name =~# '^dbb-q-\d\+$'
     let qid = matchstr(name, '\d\+$', 0)
     let q = dbb#queries#get(qid)
     let q.bufnr = a:bufnr
-    let s:b2q[a:bufnr] = qid
     return q
   endif
 endfunction
