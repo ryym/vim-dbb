@@ -60,13 +60,6 @@ function! dbb#run() abort
     return
   endif
 
-  if getbufinfo(qb.ret_bufnr) == []
-    setlocal splitbelow
-
-    execute '20split' qb.ret_path
-    let qb.ret_bufnr = bufnr('%')
-  endif
-
   let query = join(getbufline(qb.bufnr, 1, '$'), " ")
   let mes = ['Query', { 'QueryID': qb.qid, 'Query': query }]
   call ch_sendexpr(s:ch, mes, { 'callback': funcref('<SID>handle_res') })
@@ -90,11 +83,16 @@ function! <SID>show_results(ch, ret) abort
     return
   endif
 
-  let retbufinfo = getbufinfo(qb.ret_bufnr)
-  let retw = retbufinfo[0].windows[0]
-  let [rettabnr, retwinnr] = win_id2tabwin(retw)
-  execute 'tabnext' . rettabnr
-  execute retwinnr . 'wincmd w'
+  let retwinnr = s:find_ret_win_in_current_tab()
+  if retwinnr > 0
+    execute retwinnr 'wincmd w'
+    execute 'edit' qb.ret_path
+  else
+    setlocal splitbelow
+    execute '20split' qb.ret_path
+  endif
+
+  let qb.ret_bufnr = bufnr('%')
 
   setlocal noreadonly
   normal ggdG
@@ -105,4 +103,27 @@ function! <SID>show_results(ch, ret) abort
   let q_bufinfo = getbufinfo(qb.bufnr)
   let q_winnr = win_id2tabwin(q_bufinfo[0].windows[0])[0]
   execute q_winnr . 'wincmd w'
+endfunction
+
+function! s:find_ret_win_in_current_tab()
+  let ret_winids = []
+  for retbufinfo in dbb#queries#ret_bufinfos()
+    if len(retbufinfo) > 0
+      call extend(ret_winids, retbufinfo[0].windows)
+    endif
+  endfor
+
+  for win in range(1, winnr('$'))
+    let wid = win_getid(win)
+    if index(ret_winids, wid) >= 0
+      return win
+    endif
+  endfor
+
+  return 0
+endfunction
+
+function! dbb#open_query(...)
+  let qid = get(a:, 1, 0)
+  call dbb#queries#open(qid, g:dbb_work_dir)
 endfunction

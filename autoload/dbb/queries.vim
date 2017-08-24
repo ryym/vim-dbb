@@ -16,13 +16,21 @@ function! dbb#queries#start(work_dir)
     endif
   endfor
 
-  if len(files) == 0
+  let qid = len(files) == 0 ? 0 : keys(s:qdata)[len(s:qdata) - 1]
+  return dbb#queries#open(qid, a:work_dir)
+endfunction
+
+function! dbb#queries#open(qid, work_dir)
+  if a:qid == 0
     let q = dbb#queries#new(a:work_dir)
+  elseif has_key(s:qdata, a:qid)
+    let q = s:qdata[a:qid]
   else
-    let q = s:qdata[keys(s:qdata)[len(s:qdata) - 1]]
+    echoerr 'Query ' . a:qid ' does not exist'
+    return
   endif
 
-  " Open buffer
+  " Open query buffer
   execute 'edit' q.q_path
   setfiletype sql
   let q.bufnr = bufnr('%')
@@ -60,9 +68,24 @@ function! s:gen_new_query_id(qdata)
 endfunction
 
 function! dbb#queries#get_from_bufnr(bufnr)
-  return has_key(s:b2q, a:bufnr) ? s:qdata[s:b2q[a:bufnr]] : {}
+  if has_key(s:b2q, a:bufnr)
+    return s:qdata[s:b2q[a:bufnr]]
+  endif
+
+  let name = fnamemodify(bufname(a:bufnr), ':t')
+  if name =~# '^dbb-q-\d\+$'
+    let qid = matchstr(name, '\d\+$', 0)
+    let q = dbb#queries#get(qid)
+    let q.bufnr = a:bufnr
+    let s:b2q[a:bufnr] = qid
+    return q
+  endif
 endfunction
 
 function! dbb#queries#get(qid)
   return has_key(s:qdata, a:qid) ? s:qdata[a:qid] : {}
+endfunction
+
+function! dbb#queries#ret_bufinfos()
+  return map(keys(s:qdata), 'getbufinfo(s:qdata[v:val].ret_bufnr)')
 endfunction
