@@ -52,7 +52,8 @@ function! s:initial_q(qid, work_dir)
     \   'q_path': q_path,
     \   'bufnr': -1,
     \   'ret_bufnr': -1,
-    \   'ret_path': ret_path
+    \   'ret_path': ret_path,
+    \   'connection_url': g:dbb_default_connection,
     \ }
 endfunction
 

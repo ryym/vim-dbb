@@ -1,4 +1,5 @@
 let g:dbb_work_dir = expand('%:p:h') . '/_work'
+let g:dbb_default_connection = 'root:root@/mink_development'
 
 function! dbb#install_server() abort
   " TODO: Download server binary program.
@@ -14,8 +15,8 @@ function! dbb#start() abort
   endif
 
   if !s:dbb_running
-    call system('go run ' . g:vimdbb_server_src . '/cmd/vimdbb/main.go&')
     echom 'Running dbb server...'
+    call system('go run ' . g:vimdbb_server_src . '/cmd/vimdbb/main.go&')
 
     let mtry = 200
     let ntry = 0
@@ -60,8 +61,17 @@ function! dbb#run() abort
     return
   endif
 
+  if qb.connection_url == ''
+    echoerr 'Specify conection URL'
+    return
+  endif
+
   let query = join(getbufline(qb.bufnr, 1, '$'), " ")
-  let mes = ['Query', { 'QueryID': qb.qid, 'Query': query }]
+  let mes = ['Query', {
+    \   'ConnectionURL': qb.connection_url,
+    \   'QueryID': qb.qid,
+    \   'Query': query,
+    \ }]
   call ch_sendexpr(s:ch, mes, { 'callback': funcref('<SID>handle_res') })
 endfunction
 
