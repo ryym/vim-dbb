@@ -10,7 +10,7 @@ let s:ch = 0
 
 function! dbb#start() abort
   if !isdirectory(g:dbb_work_dir)
-    call mkdir(g:dbb_work_dir, "p")
+    call mkdir(g:dbb_work_dir, 'p')
   endif
 
   if !s:dbb_running
@@ -37,7 +37,8 @@ function! dbb#start() abort
   endif
 
   let s:ch = ch_open('localhost:8080')
-  call dbb#queries#new(bufnr('%'), g:dbb_work_dir)
+
+  call dbb#queries#start(g:dbb_work_dir)
 endfunction
 
 function! dbb#stop() abort
