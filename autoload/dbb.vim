@@ -13,7 +13,7 @@ function! dbb#start() abort
     return
   endif
 
-  call dbb#queries#start(g:dbb_work_dir)
+  call dbb#query#start(g:dbb_work_dir)
 endfunction
 
 function! dbb#stop() abort
@@ -26,7 +26,7 @@ function! dbb#run() abort
     return
   endif
 
-  let qb = dbb#queries#get_from_bufnr(bufnr('%'))
+  let qb = dbb#query#get_from_bufnr(bufnr('%'))
   if qb == {}
     echoerr 'This is not a query buffer'
     return
@@ -58,7 +58,7 @@ endfunction
 
 function! <SID>show_results(ret) abort
   let qid = a:ret.QueryID
-  let qb = dbb#queries#get(qid)
+  let qb = dbb#query#get(qid)
   if qb == {}
     echoerr 'Query buffer is not found'
     return
@@ -88,7 +88,7 @@ endfunction
 
 function! s:find_ret_win_in_current_tab()
   let ret_winids = []
-  for retbufinfo in dbb#queries#ret_bufinfos()
+  for retbufinfo in dbb#query#ret_bufinfos()
     if len(retbufinfo) > 0
       call extend(ret_winids, retbufinfo[0].windows)
     endif
@@ -106,5 +106,5 @@ endfunction
 
 function! dbb#open_query(...)
   let qid = get(a:, 1, 0)
-  call dbb#queries#open(qid, g:dbb_work_dir)
+  call dbb#query#open(qid, g:dbb_work_dir)
 endfunction

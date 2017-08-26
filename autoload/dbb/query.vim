@@ -1,6 +1,6 @@
 let s:qdata = {}
 
-function! dbb#queries#start(work_dir)
+function! dbb#query#start(work_dir)
   if !isdirectory(a:work_dir . '/queries')
     call mkdir(a:work_dir . '/queries')
     call mkdir(a:work_dir . '/results')
@@ -16,12 +16,12 @@ function! dbb#queries#start(work_dir)
   endfor
 
   let qid = len(files) == 0 ? 0 : keys(s:qdata)[len(s:qdata) - 1]
-  return dbb#queries#open(qid, a:work_dir)
+  return dbb#query#open(qid, a:work_dir)
 endfunction
 
-function! dbb#queries#open(qid, work_dir)
+function! dbb#query#open(qid, work_dir)
   if a:qid == 0
-    let q = dbb#queries#new(a:work_dir)
+    let q = dbb#query#new(a:work_dir)
   elseif has_key(s:qdata, a:qid)
     let q = s:qdata[a:qid]
   else
@@ -37,7 +37,7 @@ function! dbb#queries#open(qid, work_dir)
   return q
 endfunction
 
-function! dbb#queries#new(work_dir)
+function! dbb#query#new(work_dir)
   let qid = s:gen_new_query_id(s:qdata)
   let q = s:initial_q(qid, a:work_dir)
   let s:qdata[qid] = q
@@ -66,20 +66,20 @@ function! s:gen_new_query_id(qdata)
   return id
 endfunction
 
-function! dbb#queries#get_from_bufnr(bufnr)
+function! dbb#query#get_from_bufnr(bufnr)
   let name = fnamemodify(bufname(a:bufnr), ':t')
   if name =~# '^dbb-q-\d\+$'
     let qid = matchstr(name, '\d\+$', 0)
-    let q = dbb#queries#get(qid)
+    let q = dbb#query#get(qid)
     let q.bufnr = a:bufnr
     return q
   endif
 endfunction
 
-function! dbb#queries#get(qid)
+function! dbb#query#get(qid)
   return has_key(s:qdata, a:qid) ? s:qdata[a:qid] : {}
 endfunction
 
-function! dbb#queries#ret_bufinfos()
+function! dbb#query#ret_bufinfos()
   return map(keys(s:qdata), 'getbufinfo(s:qdata[v:val].ret_bufnr)')
 endfunction
