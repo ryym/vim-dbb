@@ -1,56 +1,27 @@
 let g:dbb_work_dir = expand('%:p:h') . '/_work'
 let g:dbb_default_connection = 'root:root@/mink_development'
 
-function! dbb#install_server() abort
-  " TODO: Download server binary program.
-endfunction
-
 let s:dbb_running = 0
-let s:sysch = 0
-let s:ch = 0
 
 function! dbb#start() abort
   if !isdirectory(g:dbb_work_dir)
     call mkdir(g:dbb_work_dir, 'p')
   endif
 
-  if !s:dbb_running
-    echom 'Running dbb server...'
-    call system('go run ' . g:vimdbb_server_src . '/cmd/vimdbb/main.go&')
-
-    let mtry = 200
-    let ntry = 0
-    let s:sysch = ch_open('localhost:8080')
-    while ch_status(s:sysch) != 'open'
-      sleep 10m
-      let s:sysch = ch_open('localhost:8080')
-      let ntry += 1
-      if ntry >= mtry
-        echoerr 'Can not connect to Dbb server'
-        return
-      endif
-    endwhile
-    echom 'Dbb start'
-
-    let s:dbb_running = 1
-  else
-    echo 'Dbb is already running'
+  if !dbb#server#start(g:vimdbb_server_src)
+    echoerr 'Can not connect to Dbb server'
+    return
   endif
-
-  let s:ch = ch_open('localhost:8080')
 
   call dbb#queries#start(g:dbb_work_dir)
 endfunction
 
 function! dbb#stop() abort
-  if s:dbb_running
-    call ch_sendexpr(s:sysch, ['KILL', {}])
-    let s:dbb_running = 0
-  endif
+  call dbb#server#stop()
 endfunction
 
 function! dbb#run() abort
-  if !s:dbb_running
+  if !dbb#server#is_running()
     echoerr 'Dbb is not running'
     return
   endif
@@ -67,25 +38,25 @@ function! dbb#run() abort
   endif
 
   let query = join(getbufline(qb.bufnr, 1, '$'), " ")
-  let mes = ['Query', {
+  let payload = {
     \   'ConnectionURL': qb.connection_url,
     \   'QueryID': qb.qid,
     \   'Query': query,
-    \ }]
-  call ch_sendexpr(s:ch, mes, { 'callback': funcref('<SID>handle_res') })
+    \ }
+  call dbb#server#send('Query', payload, funcref('<SID>handle_res'))
 endfunction
 
-function! <SID>handle_res(ch, res) abort
-  if a:res.Command ==# 'ERR'
+function! <SID>handle_res(res, err) abort
+  if a:err
     echoerr 'ERR: ' . a:res.Result
     return
   endif
   if a:res.Command ==# 'Query'
-    call s:show_results(a:ch, a:res.Result)
+    call s:show_results(a:res.Result)
   endif
 endfunction
 
-function! <SID>show_results(ch, ret) abort
+function! <SID>show_results(ret) abort
   let qid = a:ret.QueryID
   let qb = dbb#queries#get(qid)
   if qb == {}
