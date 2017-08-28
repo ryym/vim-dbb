@@ -33,7 +33,6 @@ function! dbb#query#open(qid, work_dir)
 
   " Open query buffer
   execute 'edit' q.q_path
-  setfiletype sql
   let q.bufnr = bufnr('%')
 
   return q
