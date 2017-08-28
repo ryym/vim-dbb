@@ -1,11 +1,22 @@
-let g:dbb_work_dir = expand('%:p:h') . '/_work'
-let g:dbb_default_connection = 'root:root@/mink_development'
+let g:dbb = {
+  \ 'work_dir': expand('%:p:h') . '/_work',
+  \ 'default_connection': 'root:root@/mink_development'
+  \ }
 
-let s:dbb_running = 0
+let s:state = {
+  \ 'queries': {},
+  \ 'ch': 0,
+  \ 'sysch': 0,
+  \ }
 
 function! dbb#start() abort
-  if !isdirectory(g:dbb_work_dir)
-    call mkdir(g:dbb_work_dir, 'p')
+  augroup vimdbb
+    autocmd!
+    autocmd VimLeavePre * call dbb#stop()
+  augroup END
+
+  if !isdirectory(g:dbb.work_dir)
+    call mkdir(g:dbb.work_dir, 'p')
   endif
 
   if !dbb#server#start(g:vimdbb_server_src)
@@ -13,7 +24,7 @@ function! dbb#start() abort
     return
   endif
 
-  call dbb#query#start(g:dbb_work_dir)
+  call dbb#query#start(s:state.queries, g:dbb.work_dir)
 endfunction
 
 function! dbb#stop() abort
@@ -106,5 +117,5 @@ endfunction
 
 function! dbb#open_query(...)
   let qid = get(a:, 1, 0)
-  call dbb#query#open(qid, g:dbb_work_dir)
+  call dbb#query#open(qid, g:dbb.work_dir)
 endfunction

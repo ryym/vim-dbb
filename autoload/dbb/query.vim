@@ -1,29 +1,31 @@
-let s:qdata = {}
+let s:queries = {}
 
-function! dbb#query#start(work_dir)
+function! dbb#query#start(queries, work_dir)
   if !isdirectory(a:work_dir . '/queries')
     call mkdir(a:work_dir . '/queries')
     call mkdir(a:work_dir . '/results')
   endif
+
+  let s:queries = a:queries
 
   " Restore query files.
   let files = split(globpath(a:work_dir . '/queries', 'dbb-q-*'), '\n')
   for f in files
     let qid = matchstr(f, '\d\+$', 0)
     if qid != ''
-      let s:qdata[qid] = s:initial_q(qid, a:work_dir)
+      let s:queries[qid] = s:initial_q(qid, a:work_dir)
     endif
   endfor
 
-  let qid = len(files) == 0 ? 0 : keys(s:qdata)[len(s:qdata) - 1]
+  let qid = len(files) == 0 ? 0 : keys(s:queries)[len(s:queries) - 1]
   return dbb#query#open(qid, a:work_dir)
 endfunction
 
 function! dbb#query#open(qid, work_dir)
   if a:qid == 0
     let q = dbb#query#new(a:work_dir)
-  elseif has_key(s:qdata, a:qid)
-    let q = s:qdata[a:qid]
+  elseif has_key(s:queries, a:qid)
+    let q = s:queries[a:qid]
   else
     echoerr 'Query ' . a:qid ' does not exist'
     return
@@ -38,9 +40,9 @@ function! dbb#query#open(qid, work_dir)
 endfunction
 
 function! dbb#query#new(work_dir)
-  let qid = s:gen_new_query_id(s:qdata)
+  let qid = s:gen_new_query_id(s:queries)
   let q = s:initial_q(qid, a:work_dir)
-  let s:qdata[qid] = q
+  let s:queries[qid] = q
   return q
 endfunction
 
@@ -53,13 +55,13 @@ function! s:initial_q(qid, work_dir)
     \   'bufnr': -1,
     \   'ret_bufnr': -1,
     \   'ret_path': ret_path,
-    \   'connection_url': g:dbb_default_connection,
+    \   'connection_url': g:dbb.default_connection,
     \ }
 endfunction
 
-function! s:gen_new_query_id(qdata)
+function! s:gen_new_query_id(queries)
   let id = strftime('%Y%m%d%H%M%S')
-  while has_key(a:qdata, id)
+  while has_key(a:queries, id)
     sleep 5m
     let id = strftime('%Y%m%d%H%M%S')
   endwhile
@@ -77,9 +79,9 @@ function! dbb#query#get_from_bufnr(bufnr)
 endfunction
 
 function! dbb#query#get(qid)
-  return has_key(s:qdata, a:qid) ? s:qdata[a:qid] : {}
+  return has_key(s:queries, a:qid) ? s:queries[a:qid] : {}
 endfunction
 
 function! dbb#query#ret_bufinfos()
-  return map(keys(s:qdata), 'getbufinfo(s:qdata[v:val].ret_bufnr)')
+  return map(keys(s:queries), 'getbufinfo(s:queries[v:val].ret_bufnr)')
 endfunction
