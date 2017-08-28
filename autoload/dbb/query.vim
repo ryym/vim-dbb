@@ -11,7 +11,7 @@ function! dbb#query#start(queries, work_dir)
   " Restore query files.
   let files = split(globpath(a:work_dir . '/queries', 'dbb-q-*'), '\n')
   for f in files
-    let qid = matchstr(f, '\d\+$', 0)
+    let qid = matchstr(f, '\d\+', 0)
     if qid != ''
       let s:queries[qid] = s:initial_q(qid, a:work_dir)
     endif
@@ -47,7 +47,7 @@ function! dbb#query#new(work_dir)
 endfunction
 
 function! s:initial_q(qid, work_dir)
-  let q_path = a:work_dir . '/queries/dbb-q-' . a:qid
+  let q_path = a:work_dir . '/queries/dbb-q-' . a:qid . '.sql'
   let ret_path = a:work_dir . '/results/dbb-ret-' . a:qid
   return {
     \   'qid': a:qid,
@@ -70,12 +70,15 @@ endfunction
 
 function! dbb#query#get_from_bufnr(bufnr)
   let name = fnamemodify(bufname(a:bufnr), ':t')
-  if name =~# '^dbb-q-\d\+$'
-    let qid = matchstr(name, '\d\+$', 0)
+  if name =~# '^dbb-q-\d\+'
+    let qid = matchstr(name, '\d\+', 0)
     let q = dbb#query#get(qid)
-    let q.bufnr = a:bufnr
+    if q != {}
+      let q.bufnr = a:bufnr
+    endif
     return q
   endif
+  return {}
 endfunction
 
 function! dbb#query#get(qid)
