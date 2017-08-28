@@ -93,7 +93,7 @@ function! <SID>show_results(ret) abort
   setlocal readonly
 
   let q_bufinfo = getbufinfo(qb.bufnr)
-  let q_winnr = win_id2tabwin(q_bufinfo[0].windows[0])[0]
+  let q_winnr = win_id2win(q_bufinfo[0].windows[0])
   execute q_winnr . 'wincmd w'
 endfunction
 
