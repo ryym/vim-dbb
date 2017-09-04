@@ -25,6 +25,7 @@ function! dbb#start() abort
   endif
 
   call dbb#query#start(s:state.queries, g:dbb.work_dir)
+  call dbb#qlist#start(s:state.queries)
 endfunction
 
 function! dbb#stop() abort
@@ -118,4 +119,8 @@ endfunction
 function! dbb#open_query(...)
   let qid = get(a:, 1, 0)
   call dbb#query#open(qid, g:dbb.work_dir)
+endfunction
+
+function! dbb#open_qlist()
+  call dbb#qlist#open(s:state.queries, g:dbb.work_dir)
 endfunction

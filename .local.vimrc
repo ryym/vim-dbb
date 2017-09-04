@@ -3,3 +3,4 @@ runtime plugin/vimdbb.vim
 
 Remap n <Space>ds <Plug>(vimdbb-start)
 Remap n <Space>dd <Plug>(vimdbb-run)
+Remap n <Space>dl <Plug>(vimdbb-qlist-open)
