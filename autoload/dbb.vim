@@ -32,15 +32,18 @@ function! dbb#stop() abort
   call dbb#server#stop()
 endfunction
 
-function! dbb#run() abort
-  if !dbb#server#is_running()
-    echoerr 'Dbb is not running'
+function! dbb#set_connection(url) abort
+  let qb = s:try_get_query_buf()
+  if qb == {}
     return
   endif
 
-  let qb = dbb#query#get_from_bufnr(bufnr('%'))
+  let qb.connection_url = a:url
+endfunction
+
+function! dbb#run() abort
+  let qb = s:try_get_query_buf()
   if qb == {}
-    echoerr 'This is not a query buffer'
     return
   endif
 
@@ -56,6 +59,20 @@ function! dbb#run() abort
     \   'Query': query,
     \ }
   call dbb#server#send('Query', payload, funcref('<SID>handle_res'))
+endfunction
+
+function! <SID>try_get_query_buf() abort
+  if !dbb#server#is_running()
+    echoerr 'Dbb is not running'
+    return {}
+  endif
+
+  let qb = dbb#query#get_from_bufnr(bufnr('%'))
+  if qb == {}
+    echoerr 'This is not a query buffer'
+  endif
+
+  return qb
 endfunction
 
 function! <SID>handle_res(res, err) abort
