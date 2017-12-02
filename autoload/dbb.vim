@@ -107,6 +107,7 @@ function! <SID>show_results(ret) abort
   setlocal noreadonly
   normal ggdG
   call setline(1, split(a:ret.Rows, '\n'))
+  setlocal nowrap
   update
   setlocal readonly
 
