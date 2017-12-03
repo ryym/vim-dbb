@@ -15,12 +15,14 @@ function! dbb#server#start(server_src) abort
   echom 'Running dbb server...'
   call system('go run ' . a:server_src . '/cmd/vimdbb/main.go&')
 
+  let server_url = 'localhost:4242'
+
   let mtry = 200
   let ntry = 0
-  let s:sysch = ch_open('localhost:8080')
+  let s:sysch = ch_open(server_url)
   while ch_status(s:sysch) != 'open'
     sleep 10m
-    let s:sysch = ch_open('localhost:8080')
+    let s:sysch = ch_open(server_url)
     let ntry += 1
     if ntry >= mtry
       return 0
@@ -28,7 +30,7 @@ function! dbb#server#start(server_src) abort
   endwhile
 
   let s:dbb_running = 1
-  let s:ch = ch_open('localhost:8080')
+  let s:ch = ch_open(server_url)
 
   return 1
 endfunction
